@@ -2,26 +2,43 @@ services:
   - type: web
     name: resume-editor-backend
     runtime: docker
-    # Render builds using the Dockerfile in the repo root (or the rootDir below).
-    # No buildCommand/startCommand needed — Dockerfile handles everything.
     plan: free
-    # Render free tier sleeps after 15 min of inactivity.
-    # Upgrade to 'starter' or higher for always-on behaviour.
     healthCheckPath: /actuator/health
     envVars:
-      # ── GitHub OAuth App ──────────────────────────────────────────────────────
+      # ── GitHub OAuth App (set values in Render dashboard → Environment) ────────
       - key: GITHUB_CLIENT_ID
-        sync: false          # Set manually in the Render dashboard → Environment tab
+        sync: false
       - key: GITHUB_CLIENT_SECRET
         sync: false
-      # ── HuggingFace Inference API ─────────────────────────────────────────────
-      - key: HF_API_KEY
+
+      # ── Spring Security OAuth2 (Spring maps these automatically from env vars) ─
+      - key: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GITHUB_CLIENT_ID
         sync: false
-      - key: HF_MODEL
+      - key: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GITHUB_CLIENT_SECRET
+        sync: false
+      - key: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GITHUB_SCOPE
+        value: read:user,repo
+      - key: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GITHUB_AUTHORIZATION_GRANT_TYPE
+        value: authorization_code
+      - key: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GITHUB_REDIRECT_URI
+        value: "{baseUrl}/login/oauth2/code/{registrationId}"
+
+      # ── HuggingFace Inference API ─────────────────────────────────────────────
+      - key: HUGGINGFACE_API_KEY
+        sync: false
+      - key: HUGGINGFACE_MODEL
         value: meta-llama/Llama-3.1-8B-Instruct
+
       # ── JWT ───────────────────────────────────────────────────────────────────
       - key: JWT_SECRET
         sync: false
+      - key: JWT_EXPIRY_DAYS
+        value: "30"
+
       # ── CORS ─────────────────────────────────────────────────────────────────
       - key: CORS_ALLOWED_ORIGINS
-        value: http://localhost:3000
+        sync: false          # Set this to your Render URL or * once deployed
+
+      # ── Reverse proxy headers (same as Railway) ───────────────────────────────
+      - key: SERVER_FORWARD_HEADERS_STRATEGY
+        value: framework
