@@ -1,14 +1,12 @@
 services:
   - type: web
     name: resume-editor-backend
-    runtime: java
-    # Render auto-detects Maven projects; this explicitly sets the build command.
-    buildCommand: ./mvnw -q clean package -DskipTests
-    # Render injects the PORT env var automatically; Spring Boot reads it via ${PORT:8080}.
-    startCommand: java -jar target/resume_editor-0.0.1-SNAPSHOT.jar
+    runtime: docker
+    # Render builds using the Dockerfile in the repo root (or the rootDir below).
+    # No buildCommand/startCommand needed — Dockerfile handles everything.
     plan: free
-    # Render free tier sleeps after 15 min of inactivity — acceptable for dev/hobby use.
-    # Upgrade to 'starter' or higher to keep the instance always-on.
+    # Render free tier sleeps after 15 min of inactivity.
+    # Upgrade to 'starter' or higher for always-on behaviour.
     healthCheckPath: /actuator/health
     envVars:
       # ── GitHub OAuth App ──────────────────────────────────────────────────────
@@ -25,6 +23,5 @@ services:
       - key: JWT_SECRET
         sync: false
       # ── CORS ─────────────────────────────────────────────────────────────────
-      # Set this to your Android app's deep-link origin or keep it restrictive.
       - key: CORS_ALLOWED_ORIGINS
         value: http://localhost:3000
